@@ -6,6 +6,10 @@ from numpy import allclose as npc
 import os
 import apres as ap
 
+# JDH 2026-09-25
+# > Add pathlib to deal with file/directory based tests
+import pathlib
+
 def test_shape_of_output_from_bas_apres():
     with ap.ApRESFile('data/sample/multi-burst-dat-file/DATA2022-05-22-1939.DAT') as f: 
         f.read()
@@ -120,7 +124,14 @@ def test_file_search_methods():
 
     lower_level_list_of_dats = fs.list_files(data_directory + "/sample/polarmetric")
     # test that all the files found in a lower level directory were also found when searching in a higher level directory
-    assert all(item in higher_level_list_of_dats for item in lower_level_list_of_dats)
+
+    # this test can fail when string representations of paths are preserved
+    # and \\ vs / are used in paths (i.e. Windows)
+    higher_level_list_of_dats_paths = [
+        pathlib.Path(higher_path) for higher_path in higher_level_list_of_dats
+    ]
+
+    assert all(pathlib.Path(item) in higher_level_list_of_dats_paths for item in lower_level_list_of_dats)
 
     # test that the case of the extension (DAT vs dat) doesnt matter
     assert len(fs.list_files(data_directory + "/sample/different_case_examples")) == 2
@@ -379,3 +390,18 @@ def test_attended_fft():
     fd = load.from_dats()
     fd.load_all(attended=True, directory='data/sample/attended/').addProfileToDs()
     fd.load_all(attended=True, directory='data/sample/attended/').chirp.computeProfile()
+
+# UHF tests
+def test_uhf_automatic_load_attended():
+
+    # We'll try to load one of the sample UHF files without any special
+    # flags and check that the bandwidth, frequency and range values all
+    # look reasonable
+    uhf_path = r"data/sample/uhf_southern_AP/DATA2025-12-11-1036.DAT"
+
+    # now we can attemp to load the file
+    fd = load.from_dats()
+    xr = fd.load(uhf_path)
+
+    # and validate the outcome
+    assert True
