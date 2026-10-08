@@ -538,7 +538,11 @@ def computeProfile(self: xr.DataArray,
     c = constants['c']       # speed of light in a vacuum [m/s]
     ep = constants['ep']     # permittivity of ice
     f_c = constants['f_c']   # center frequency [Hz]
-    dt = constants['dt']     # time step [s]
+    # JDH 2026-10-07: this is the incorrect 'dt' as it is set to TStepUp 
+    # Instead, we can calculate dt from the chirp time, but really it should
+    # also account for the value of SamplingFreqMode in the header if available
+    dt = (self.chirp_time.values[1] - self.chirp_time.values[0])
+    # dt = constants['dt']     # time step [s]
 
     def rdei(x):
         """round down to the nearest even integer and return an integer"""
